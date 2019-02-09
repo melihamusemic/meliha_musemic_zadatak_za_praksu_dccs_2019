@@ -1,0 +1,16 @@
+{
+  "name": "zadatakzapraksu",
+  "version": "1.0.0",
+  "description": "test",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "public": "file:./public"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.16.4",
+    "jquery": "^3.3.1",
+    "pg": "^7.8.0"
+  }
+}
