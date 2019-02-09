@@ -16,7 +16,7 @@ app.use(
 app.use("/public", express.static(__dirname + "/public"));
 
 app.get('/', (request, response) => {
-    response.redirect('zadatak.html');
+    response.redirect('public/zadatak.html');
 })
 
 app.get('/zadatak.css', (request, response) => {
