@@ -54,13 +54,6 @@ input[type = text]{
     box-sizing: border-box;
 }
 
-input[type = select]{
-    font-size: 17px;
-}
-
-.selectFormularName select {
-width: 180px;
-}
 
 .selectFormularName select {
     width: 170px;
