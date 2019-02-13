@@ -16,15 +16,15 @@ app.use(
 app.use("/public", express.static(__dirname + "/public"));
 
 app.get('/', (request, response) => {
-    response.redirect('public/zadatak.html');
+    response.redirect('public/webPage.html');
 })
 
-app.get('/zadatak.css', (request, response) => {
-    response.redirect('zadatak.css');
+app.get('/webPage.css', (request, response) => {
+    response.redirect('webPage.css');
 })
 
-app.get('/zadatak.js', (request, response) => {
-    response.redirect('zadatak.js');
+app.get('/webPage.js', (request, response) => {
+    response.redirect('webPage.js');
 })
 
 app.get('/background.jpg', (request, response) => {

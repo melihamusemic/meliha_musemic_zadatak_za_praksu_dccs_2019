@@ -3,7 +3,7 @@ var config = {
      host: 'localhost',
      user: 'meliha',
      password: 'meliha123',
-     database: 'zaPraksu',
+     database: 'DB',
      port: 5432
 };
 

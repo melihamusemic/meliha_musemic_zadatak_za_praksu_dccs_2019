@@ -48,6 +48,12 @@ input[type = button] {
  font-size: 17px;
 }
 
+
+input[type = submit] {
+    width: 100px;
+    font-size: 17px;
+   }
+
 input[type = text]{
     font-size: 17px;
     margin:  20px;
@@ -58,4 +64,64 @@ input[type = text]{
 .selectFormularName select {
     width: 170px;
     font-size:17px;
+}
+
+.saveButton {
+    display: none;
+    float: right;
+    margin-right: 27%;
+    margin-top: 20px;
+    font-size: 17px;
+}
+
+.addButton {
+    width: 30px; 
+    height: 30px; 
+    font-size: 20px ;
+    text-align: center;
+    border-radius: 50%;  
+    background-color: #a39e9f;
+    margin-left: 20px;
+    border: none;
+}
+
+.elContainer {
+    display: block;
+    padding-left: 100px;
+    text-align: left;
+    width: 80%; 
+}
+
+input[class = rbLabel] {
+    margin-left: 387px;
+    margin-top: 0px;
+    margin-bottom: 2px;
+    font-size: 13px;
+}
+
+.selectNumber{
+    display: none;
+    margin-left: 20px;
+}
+
+.select2{
+    margin-left: 20px;
+    margin-bottom: 30px;
+}
+
+.radioButtonLabels {
+    display: none;
+}
+
+.selectName {
+    width: 250px;
+}
+
+input[class = version]{
+    width:50px;
+}
+
+.buttonInput {
+    margin-right: 15px;
+    margin-left: 85px;
 }

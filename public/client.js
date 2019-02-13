@@ -5,7 +5,8 @@ $(document).ready(function () {
     // -------- TAB 1 --------
 
     // function used on click for search buton 
-    jQuery("#searchButton").click(function () {
+    jQuery("#form1").submit(function (e) {
+        e.preventDefault();
         jQuery.ajax({
             type: "GET",
             url: 'http://localhost:3001/all',
@@ -35,7 +36,7 @@ $(document).ready(function () {
                             var validation = obj[2];
                             var elementType = obj[3];
 
-                            //the process is similar to adding elements in zadatak.js (there is detailed description),
+                            //the process is similar to adding elements in webPage.js (there is detailed description),
                             // but now we use received data from base
                             var elementContainer = document.createElement("div");
                             var containerForLabels = document.createElement("div");
@@ -50,7 +51,7 @@ $(document).ready(function () {
 
                             elementContainer.id = elementId;
                             containerForLabels.id = "radioButtonLabel" + elementId;
-                            containerForLabels.style.display = "none";
+                            containerForLabels.className = "radioButtonLabels";
 
                             input.type = "text";
                             if (label != null)
@@ -60,13 +61,7 @@ $(document).ready(function () {
                             }
                             input.style.fontSize = "13px";
 
-                            for (var i = 0; i < selectArray1.length; i++) {
-                                var option = document.createElement("option");
-                                option.value = selectArray1[i];
-                                option.text = selectArray1[i];
-                                option.id = i;
-                                select1.appendChild(option);
-                            }
+                            createSelect(select1, selectArray1);
 
                             select1.onchange = function () {
                                 var opt = this.options[this.selectedIndex].value;
@@ -87,32 +82,16 @@ $(document).ready(function () {
                                 addRadioButtonLabels(number, this.parentElement.id);
                             }
 
+                            createSelectNumber(selectNumber);
 
-                            for (var k = 2; k <= 10; k++) {
-                                var option = document.createElement("option");
-                                option.value = k;
-                                option.text = k;
-                                selectNumber.appendChild(option);
-                            }
+                            createSelect(select2, selectArray2);
 
-                            for (var i = 0; i < selectArray2.length; i++) {
-                                var option = document.createElement("option");
-                                option.value = selectArray2[i];
-                                option.text = selectArray2[i];
-                                select2.appendChild(option);
-                            }
-
-                            selectNumber.style.display = "none";
-                            selectNumber.style.marginLeft = "20px";
+                            selectNumber.className = "selectNumber";
                             selectNumber.id = "select" + elementId;
 
-                            select2.style.marginLeft = "20px";
+                            select2.className = "select2";
 
-                            addButton.type = "submit";
-                            addButton.value = "+";
-                            addButton.setAttribute("style", "width: 30px; height: 30px; font-size: 20px ; border-radius: 50%   ; background-color:#a39e9f; ");
-                            addButton.style.marginLeft = "20px";
-                            addButton.style.border = "none";
+                            createAddButton(addButton);
                             addButton.style.display = "none";
 
                             addButton.onclick = function () {
@@ -120,11 +99,7 @@ $(document).ready(function () {
                                 addElement();
                             };
 
-                            elementContainer.class = "elContainer";
-                            elementContainer.style.display = "block";
-                            elementContainer.style.paddingLeft = "100px";
-                            elementContainer.setAttribute("align", "left");
-                            elementContainer.style.width = "80%";
+                            elementContainer.className = "elContainer";
 
                             saveButton1.style.display = "block";
 
@@ -162,14 +137,12 @@ $(document).ready(function () {
                                             else {
                                                 buttonInput.placeholder = "Radio button label " + n;
                                             }
-                                            buttonInput.style.marginLeft = "387px";
-                                            buttonInput.style.marginTop = "0px";
-                                            buttonInput.style.marginBottom = "2px";
-                                            buttonInput.style.fontSize = "13px";
 
-                                            containerForLabels.style.width = "700px";
-                                            containerForLabels.style.display = "block";
+                                            buttonInput.className = "rbLabel";
+
                                             selectNumber.selectedIndex = containerForLabels.childElementCount - 1;  // for selecting number of existing radio buttons on selectNumber
+
+                                            containerForLabels.style.display = "block";
                                             containerForLabels.appendChild(buttonInput); // append this radio button
                                         }
                                     }
@@ -233,15 +206,10 @@ $(document).ready(function () {
                                 input.placeholder = "Radio button label " + n;
                             }
 
-                            input.style.marginLeft = "387px";
-                            input.style.marginTop = "0px";
-                            input.style.marginBottom = "2px";
-                            input.style.fontSize = "13px";
-
-                            container.style.width = "700px";
-                            container.style.display = "block";
+                            input.className = "rbLabel";
 
                             document.getElementById("select" + entry.elementid).selectedIndex = container.childElementCount - 1;
+
                             container.appendChild(input);
                             container.style.display = "block";
                         }
@@ -319,8 +287,7 @@ $(document).ready(function () {
                     select.appendChild(option);
                 }
                 select.selectedIndex = -1;
-                select.style.width = "300px";
-
+                select.className = "selectName";
             }
         })
     });
@@ -329,8 +296,6 @@ $(document).ready(function () {
     jQuery("#loadButton").click(function () {
         var name = document.getElementById("selectFormular").value;
         var ver = document.getElementById("version").value;
-        if (ver == "")
-            ver = 0;
 
         jQuery.ajax({
             type: "GET",
@@ -347,7 +312,6 @@ $(document).ready(function () {
                 var arrayOfObjects = Object.values(entry)[0];  // objects received from database
 
                 clearBox("panel2");
-
                 if (arrayOfObjects != null) {
                     var len = arrayOfObjects.length;
 
@@ -355,6 +319,7 @@ $(document).ready(function () {
                     if (len != 0) {
                         arrayOfObjects.sort(function (a, b) { return a.elementid - b.elementid });
                         var row = 0;
+
                         while (arrayOfObjects[row] != null && arrayOfObjects[row].hasOwnProperty('elementid')) {
                             var obj = Object.values(arrayOfObjects[row]);
                             var lab = obj[0];
@@ -377,7 +342,7 @@ $(document).ready(function () {
 
                             if (elementType == "Textbox") {
                                 if (validation == "Numeric")
-                                    input.type = "numeric";
+                                    input.type = "number";
                                 else
                                     input.type = "text";
                                 input.value = value;
@@ -416,9 +381,7 @@ $(document).ready(function () {
                                         buttonInput.value = buttonValue;
                                         buttonInput.id = buttonid;
                                         buttonInput.name = "radioButton" + buttonGroupId;
-
-                                        buttonInput.style.marginRight = "15px";
-                                        buttonInput.style.marginLeft = "80px";
+                                        buttonInput.className = "buttonInput";
 
                                         container.appendChild(buttonContainer);
                                         container.id = buttonGroupId;
@@ -436,12 +399,10 @@ $(document).ready(function () {
                             }
 
                             input.id = elementId;
-                            input.style.marginBottom = "20px";
-                            input.style.marginLeft = "30px";
+                            input.className = "select2";
 
+                            elementContainer.className = "elContainer";
                             elementContainer.style.fontSize = "15px";
-                            elementContainer.style.paddingLeft = "200px";
-                            elementContainer.setAttribute("align", "left");
 
                             panel2Container.appendChild(elementContainer);
                             row++;
@@ -457,9 +418,8 @@ $(document).ready(function () {
         })
     })
 
-
-
-    jQuery("#saveButton2").click(function () {
+    jQuery("#form2").submit(function (e) {
+        e.preventDefault();
         var name = document.getElementById("selectFormular").value;
         var ver = parseInt(document.getElementById("version").value);
         var divs = document.getElementById("panel2").children;

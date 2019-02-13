@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <script src="jquery-3.3.1.min.js"></script>
+
+  <!-- we are using webPage.js to get wanted functionality -->
+  <script src="webPage.js" type="text/javascript"></script>
+
+  <script src="client.js" type="text/javascript"></script> <!-- client.js is used for communication with server -->
+  <title>
+    A web page
+  </title>
+  <link rel="stylesheet" type="text/css" href="webPage.css"> <!-- webPage.css is used for appearance-->
+</head>
+
+<body style="padding: 20px;">
+
+  <!-- creating tabs -->
+  <div class="tab">
+    <div class="buttons">
+      <button onclick="showPanel(0)" id="administration"> Administration </button>
+      <button id="formular"> Formular </button>
+    </div>
+    <div class="panel">
+      <!-- panel for first tab (administration)-->
+      <form id="form1">
+        <!-- for validation we use form -->
+        <p style="padding-bottom: 10px;">
+          Formular name:
+          <!-- textfield used in first tab for entering formular name-->
+          <input type="text" name="formularName" id="formularName" value="" autocomplete="off" required>
+          <input type="submit" id="searchButton" value="Search"> <!-- search button-->
+        </p>
+      </form>
+    </div>
+    <form id="form2">
+      <div class="panel">
+        <!-- panel for second tab (formular) -->
+
+        <p class=" selectFormularName" style="padding-bottom: 10px;">
+          Formular name:
+          <!-- select element with created formulars  -->
+          <select name="formularName" id="selectFormular"></select>
+          Version:
+          <!-- version input field -->
+          <input type="number" id="version" value="" autocomplete="off" min="1" required>
+          <input type="button" id="loadButton" value="Load"> <!-- load button -->
+        </p>
+        <input type="button" id="saveButton1" value="Save" class="saveButton"> <!-- two save buttons for each tab-->
+        <input type="submit" id="saveButton2" value="Save" class="saveButton">
+      </div>
+    </form>
+
+  </div>
+</body>
+
+</html>
