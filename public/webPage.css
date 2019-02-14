@@ -109,7 +109,7 @@ input[class = rbLabel] {
     margin-bottom: 30px;
 }
 
-.radioButtonLabels {
+.hide {
     display: none;
 }
 
@@ -120,4 +120,8 @@ input[class = version]{
 .buttonInput {
     margin-right: 15px;
     margin-left: 85px;
+}
+
+.show {
+    display: block;
 }

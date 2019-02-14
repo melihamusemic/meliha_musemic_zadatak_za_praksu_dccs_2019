@@ -59,6 +59,19 @@ const getFormularNames = (request, response) => {
      })
 }
 
+const getFormularVersions = (request, response) => {
+     const name = request.query.formularName;
+     pool.query("SELECT version FROM formular WHERE formularname = '\"" + name + "\"'", (error, results) => {
+          if (error) {
+               console.log("err " + error);
+               throw error
+          }
+          response.status(200).jsonp(results.rows)
+
+     })
+}
+
+
 // getting from database filled or blank forms 
 const getFilledFormular = (request, response) => {
      const name = request.query.formularName;
@@ -88,6 +101,7 @@ module.exports = {
      getRButtons,
      createFormular,
      getFormularNames,
+     getFormularVersions,
      getFilledFormular,
      fillFormular
 }

@@ -12,7 +12,7 @@ $(document).ready(function () {
             url: 'http://localhost:3001/all',
             crossDomain: true,
             withCredentials: true,
-            dataType: "jsonp",
+            dataType: "json",
             data: {
                 formularName: document.getElementById("formularName").value
             },
@@ -77,12 +77,12 @@ $(document).ready(function () {
                                 }
                             }
 
+                            createSelectNumber(selectNumber);
+
                             selectNumber.onchange = function () {
                                 var number = this.options[this.selectedIndex].value;
                                 addRadioButtonLabels(number, this.parentElement.id);
                             }
-
-                            createSelectNumber(selectNumber);
 
                             createSelect(select2, selectArray2);
 
@@ -92,16 +92,11 @@ $(document).ready(function () {
                             select2.className = "select2";
 
                             createAddButton(addButton);
-                            addButton.style.display = "none";
-
-                            addButton.onclick = function () {
-                                this.style.display = "none";
-                                addElement();
-                            };
+                            addButton.classList.add("hide");
 
                             elementContainer.className = "elContainer";
 
-                            saveButton1.style.display = "block";
+                            saveButton1.classList.add("show");
 
                             elNumber++;
 
@@ -112,7 +107,7 @@ $(document).ready(function () {
                             else if (elementType == "Radio buttons") {
                                 select1.selectedIndex = 2;
                                 selectNumber.style.display = "inline";
-                                containerForLabels.style.display = "block";
+                                containerForLabels.classList.add("show");
                             }
 
                             if (validation == "Mandatory")
@@ -142,7 +137,7 @@ $(document).ready(function () {
 
                                             selectNumber.selectedIndex = containerForLabels.childElementCount - 1;  // for selecting number of existing radio buttons on selectNumber
 
-                                            containerForLabels.style.display = "block";
+                                            containerForLabels.classList.add("show");
                                             containerForLabels.appendChild(buttonInput); // append this radio button
                                         }
                                     }
@@ -183,7 +178,7 @@ $(document).ready(function () {
             url: 'http://localhost:3001/rbuttons',
             crossDomain: true,
             withCredentials: true,
-            dataType: "jsonp",
+            dataType: "json",
             data: {
                 formularName: document.getElementById("formularName").value
             },
@@ -211,7 +206,7 @@ $(document).ready(function () {
                             document.getElementById("select" + entry.elementid).selectedIndex = container.childElementCount - 1;
 
                             container.appendChild(input);
-                            container.style.display = "block";
+                            container.classList.add("show");
                         }
                     }
                 }
@@ -249,7 +244,7 @@ $(document).ready(function () {
             url: 'http://localhost:3001/createFormular',
             crossDomain: true,
             withCredentials: true,
-            dataType: "jsonp",
+            dataType: "json",
             data: {
                 formularName: document.getElementById("formularName").value,
                 element: elements
@@ -274,7 +269,7 @@ $(document).ready(function () {
             url: 'http://localhost:3001/getFormularNames',
             crossDomain: true,
             withCredentials: true,
-            dataType: "jsonp",
+            dataType: "json",
             success: function (response) {
                 var select = document.getElementById("selectFormular");
                 clearBox("selectFormular");
@@ -305,7 +300,7 @@ $(document).ready(function () {
                 url: 'http://localhost:3001/getFilledFormular',
                 crossDomain: true,
                 withCredentials: true,
-                dataType: "jsonp",
+                dataType: "json",
                 data: {
                     formularName: name,
                     version: ver,
@@ -414,9 +409,9 @@ $(document).ready(function () {
                             }
 
                         }
-                        saveButton2.style.display = "block";
+                        saveButton2.classList.add("show");
                     } else
-                        saveButton2.style.display = "none";
+                        saveButton2.classList.add("hide");
 
                 }
 
@@ -427,80 +422,110 @@ $(document).ready(function () {
     jQuery("#form2").submit(function (e) {
         e.preventDefault();
         var name = document.getElementById("selectFormular").value;
+
+        // version can not be empty when saving
         if (document.getElementById("version").value == "")
             alert("Version empty! Please enter version!");
         else {
             var ver = parseInt(document.getElementById("version").value);
             var divs = document.getElementById("panel2").children;
             var elements = [];
+            var versions = [];
 
-            for (var i = 0; i < divs.length; i++) {
-                if (divs[i].children[0].nodeName == "INPUT") {  // if textbox or checkbox
-                    var elem = divs[i].children[0];
-                    var id = elem.id;
-                    if (elem.type == "text" || elem.type == "number") {
-                        var type = "Textbox";
-                        var elementValue = elem.value;
-                    }
-                    else {
-                        var type = "Checkbox";
-                        var elementValue;
-                        if (elem.checked)
-                            elementValue = true;
-                        else
-                            elementValue = false;
-                    }
-                    elements.push({ elementId: id, elementType: type, value: elementValue });  // push informations about textbox/checkbox
-                }
-
-                else if (divs[i].children[0].nodeName == "DIV") {  // else if radio buttons (each is stored into div, than in group div)
-                    var rbGroupDiv = divs[i].children[0];
-                    var rbGroupId = rbGroupDiv.id;
-                    var rButtons = [];
-
-                    if (rbGroupDiv.childElmentCount != 0) {
-                        for (var k = 0; k < rbGroupDiv.childElementCount; k++) {
-                            buttonDiv = rbGroupDiv.children[k];
-                            if (buttonDiv.childElementCount != 0) {
-                                for (var j = 0; j < buttonDiv.childElementCount; j++) {
-                                    var rb = buttonDiv.children[j];
-                                    var rbValue;
-                                    var rbId;
-
-                                    if (rb.checked)  // if checked send into database "true"
-                                        rbValue = true;
-                                    else             // else send "false" 
-                                        rbValue = false;
-                                    rbId = rb.id;
-                                    rButtons.push({ value: rbValue, id: rbId }); // we store infromations about radio button into array (value and id)
-                                }
-                            }
-                        }
-                    }
-                    elements.push({ elementId: rbGroupId, elementType: "Radio buttons", buttons: rButtons }); // push whole element "Radio buttons"
-                }
-            }
-
-            // send data
+            // check if this version exsists
             jQuery.ajax({
                 type: "GET",
-                url: 'http://localhost:3001/fillFormular',
+                url: 'http://localhost:3001/getFormularVersions',
                 crossDomain: true,
                 withCredentials: true,
-                dataType: "jsonp",
+                dataType: "json",
                 data: {
-                    formularName: name,
-                    version: ver,
-                    element: elements
+                    formularName: name
                 },
-                success: function () {
+                success: function (response) {
+                    for (var i = 0; i < response.length; i++) {
+                        versions.push(response[i].version);
+                    }
+
+                    if (versions.indexOf(ver) != -1) { // we can not save version that exists, we can only change with loading it
+                        alert("Version exists! Please load it to make changes!");
+                        err = true;
+                        return;
+                    }
+                    else {
+                        for (var i = 0; i < divs.length; i++) {
+                            if (divs[i].children[0].nodeName == "INPUT") {  // if textbox or checkbox
+                                var elem = divs[i].children[0];
+                                var id = elem.id;
+                                if (elem.type == "text" || elem.type == "number") {
+                                    var type = "Textbox";
+                                    var elementValue = elem.value;
+                                }
+                                else {
+                                    var type = "Checkbox";
+                                    var elementValue;
+                                    if (elem.checked)
+                                        elementValue = true;
+                                    else
+                                        elementValue = false;
+                                }
+                                elements.push({ elementId: id, elementType: type, value: elementValue });  // push informations about textbox/checkbox
+                            }
+
+                            else if (divs[i].children[0].nodeName == "DIV") {  // else if radio buttons (each is stored into div, then in group div)
+                                var rbGroupDiv = divs[i].children[0];
+                                var rbGroupId = rbGroupDiv.id;
+                                var rButtons = [];
+
+                                if (rbGroupDiv.childElmentCount != 0) {
+                                    for (var k = 0; k < rbGroupDiv.childElementCount; k++) {
+                                        buttonDiv = rbGroupDiv.children[k];
+                                        if (buttonDiv.childElementCount != 0) {
+                                            for (var j = 0; j < buttonDiv.childElementCount; j++) {
+                                                var rb = buttonDiv.children[j];
+                                                var rbValue;
+                                                var rbId;
+
+                                                if (rb.checked)  // if checked send into database "true"
+                                                    rbValue = true;
+                                                else             // else send "false" 
+                                                    rbValue = false;
+                                                rbId = rb.id;
+                                                rButtons.push({ value: rbValue, id: rbId }); // we store infromations about radio button into array (value and id)
+                                            }
+                                        }
+                                    }
+                                }
+                                elements.push({ elementId: rbGroupId, elementType: "Radio buttons", buttons: rButtons }); // push whole element "Radio buttons"
+                            }
+                        }
+
+                        // send data
+                        jQuery.ajax({
+                            type: "GET",
+                            url: 'http://localhost:3001/fillFormular',
+                            crossDomain: true,
+                            withCredentials: true,
+                            dataType: "json",
+                            data: {
+                                formularName: name,
+                                version: ver,
+                                element: elements
+                            },
+                            success: function () {
+                            },
+                            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                                alert("Status: " + textStatus); alert("Error: " + errorThrown);
+                            }
+                        });
+                    }
+
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     alert("Status: " + textStatus); alert("Error: " + errorThrown);
                 }
             });
         }
-    }
-    );
+    });
 
 });

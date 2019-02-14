@@ -35,6 +35,7 @@ app.get('/all', db.getAll);
 app.get('/rbuttons', db.getRButtons);
 app.get('/createFormular', db.createFormular);
 app.get('/getFormularNames', db.getFormularNames);
+app.get('/getFormularVersions', db.getFormularVersions);
 app.get('/getFilledFormular', db.getFilledFormular);
 app.get('/fillFormular', db.fillFormular);
 

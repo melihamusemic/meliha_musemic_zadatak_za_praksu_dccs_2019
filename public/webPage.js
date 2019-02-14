@@ -16,6 +16,7 @@ function showPanel(panelIndex) {
     tabPanels[panelIndex].style.display = "block";
 }
 
+
 // function used for removing children from some element
 function clearBox(elementID) {
     var div = document.getElementById(elementID);
@@ -44,6 +45,7 @@ function addElement() {
     var selectArray2 = ["Mandatory", "None", "Numeric"]; // array used for select2
 
     containerForLabels.className = "radioButtonLabels";
+    containerForLabels.classList.add("hide");
     containerForLabels.id = "radioButtonLabel" + elNumber;
 
     input.type = "text";
@@ -67,13 +69,13 @@ function addElement() {
         }
     }
 
+    // adding options to selectNumber (numbers 2-10)
+    createSelectNumber(selectNumber);
+
     selectNumber.onchange = function () {
         var number = selectNumber.options[selectNumber.selectedIndex].value;  // selected number
         addRadioButtonLabels(number, selectNumber.id);  // function call for adding textfields for radio button labels
     }
-
-    // adding options to selectNumber (numbers 2-10)
-    createSelectNumber(selectNumber);
 
     // adding options to select2
     createSelect(select2, selectArray2);
@@ -88,14 +90,9 @@ function addElement() {
 
     createAddButton(addButton);
 
-    addButton.onclick = function () {
-        this.style.display = "none"; // addButton is hidden in this row
-        addElement(); // adding next row
-    };
-
     elementContainer.className = "elContainer";
 
-    saveButton1.style.display = "block";   // show save button when element is added
+    saveButton1.classList.add("show");  // show save button when element is added
 
     panel1Container.appendChild(elementContainer);
     elementContainer.appendChild(textnode);
@@ -132,7 +129,7 @@ function addRadioButtonLabels(number, id) {
             input.placeholder = "Radio button label " + n;
             input.className = "rbLabel";
 
-            elementContainer.style.display = "block";
+            elementContainer.classList.add("show");
 
             elementContainer.appendChild(input);
 
@@ -163,6 +160,11 @@ function createSelectNumber(selectNumber) {
 function createAddButton(addButton) {
     addButton.value = "+";
     addButton.className = "addButton";
+
+    addButton.onclick = function () {
+        this.style.display = "none"; // addButton is hidden in this row
+        addElement(); // adding next row
+    };
 }
 
 window.onload = function () {

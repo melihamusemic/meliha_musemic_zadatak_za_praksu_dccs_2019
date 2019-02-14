@@ -5,7 +5,7 @@
 -- Dumped from database version 10.6 (Ubuntu 10.6-0ubuntu0.18.04.1)
 -- Dumped by pg_dump version 10.6 (Ubuntu 10.6-0ubuntu0.18.04.1)
 
--- Started on 2019-02-14 03:08:25 CET
+-- Started on 2019-02-14 16:24:21 CET
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -362,23 +362,6 @@ $$;
 
 ALTER FUNCTION public.insert_from_json(in_json json) OWNER TO meliha;
 
---
--- TOC entry 219 (class 1255 OID 17728)
--- Name: nesto(jsonb); Type: FUNCTION; Schema: public; Owner: meliha
---
-
-CREATE FUNCTION public.nesto(novi jsonb) RETURNS SETOF integer
-    LANGUAGE plpgsql
-    AS $$
-BEGIN
- RETURN QUERY SELECT buttonId FROM radiobutton, jsonb_array_elements(novi->'element') rec
-  WHERE elementid = (rec->>'elementId')::int
- ;-- AND (SELECT (rec1->>'id')::int FROM jsonb_array_elements(rec->'buttons') rec1 WHERE (rec->>'id')::int = buttonId) = buttonId;
-END; 
-$$;
-
-
-ALTER FUNCTION public.nesto(novi jsonb) OWNER TO meliha;
 
 SET default_tablespace = '';
 
@@ -561,9 +544,6 @@ ALTER TABLE ONLY public.radiobutton ALTER COLUMN buttonid SET DEFAULT nextval('p
 --
 
 COPY public.checkbox (elementid, value) FROM stdin;
-1752	\N
-1850	f
-1857	f
 \.
 
 
@@ -574,27 +554,6 @@ COPY public.checkbox (elementid, value) FROM stdin;
 --
 
 COPY public.element (elementid, formularid, elementtype, label, validation) FROM stdin;
-1848	443	Textbox	Label 1	Mandatory
-1849	443	Textbox	Label 2	None
-1850	443	Checkbox	Label 3	None
-1851	443	Textbox	Label 4	Numeric
-1852	443	Radio buttons	Label 5	Mandatory
-1853	443	Textbox	Label 6	None
-1854	443	Radio buttons	Label 7	None
-1855	445	Textbox	Label 1	Mandatory
-1856	445	Textbox	Label 2	None
-1857	445	Checkbox	Label 3	None
-1858	445	Textbox	Label 4	Numeric
-1859	445	Radio buttons	Label 5	Mandatory
-1860	445	Textbox	Label 6	None
-1861	445	Radio buttons	Label 7	None
-1750	382	Textbox	Label 1	Mandatory
-1751	382	Textbox	Label 2	None
-1752	382	Checkbox	Label 3	None
-1753	382	Textbox	Label 4	Numeric
-1754	382	Radio buttons	Label 5	Mandatory
-1755	382	Textbox	Label 6	None
-1756	382	Radio buttons	Label 7	None
 \.
 
 
@@ -605,9 +564,6 @@ COPY public.element (elementid, formularid, elementtype, label, validation) FROM
 --
 
 COPY public.formular (formularid, formularname, version) FROM stdin;
-382	"Some existing formular"	0
-443	"Some existing formular"	1
-445	"Some existing formular"	12
 \.
 
 
@@ -618,21 +574,6 @@ COPY public.formular (formularid, formularname, version) FROM stdin;
 --
 
 COPY public.radiobutton (elementid, buttonid, buttonlabel, value) FROM stdin;
-1754	1022	Radio button label 3	\N
-1754	1023	Radio button label 2	\N
-1754	1024	Radio button label 1	\N
-1756	1025	rbl  1	\N
-1756	1026	rbl 2	\N
-1852	1086	Radio button label 3	f
-1852	1087	Radio button label 2	f
-1852	1088	Radio button label 1	t
-1854	1089	rbl  1	t
-1854	1090	rbl 2	f
-1859	1091	Radio button label 3	f
-1859	1092	Radio button label 2	f
-1859	1093	Radio button label 1	t
-1861	1094	rbl  1	f
-1861	1095	rbl 2	f
 \.
 
 
@@ -643,18 +584,6 @@ COPY public.radiobutton (elementid, buttonid, buttonlabel, value) FROM stdin;
 --
 
 COPY public.textbox (elementid, value) FROM stdin;
-1755	\N
-1753	\N
-1751	\N
-1750	\N
-1848	nesto
-1849	
-1851	
-1853	
-1855	jjj
-1856	
-1858	
-1860	
 \.
 
 
@@ -664,7 +593,7 @@ COPY public.textbox (elementid, value) FROM stdin;
 -- Name: element_elementid_seq; Type: SEQUENCE SET; Schema: public; Owner: meliha
 --
 
-SELECT pg_catalog.setval('public.element_elementid_seq', 1861, true);
+SELECT pg_catalog.setval('public.element_elementid_seq', 1966, true);
 
 
 --
@@ -673,7 +602,7 @@ SELECT pg_catalog.setval('public.element_elementid_seq', 1861, true);
 -- Name: formular_formularid_seq; Type: SEQUENCE SET; Schema: public; Owner: meliha
 --
 
-SELECT pg_catalog.setval('public.formular_formularid_seq', 445, true);
+SELECT pg_catalog.setval('public.formular_formularid_seq', 460, true);
 
 
 --
@@ -682,7 +611,7 @@ SELECT pg_catalog.setval('public.formular_formularid_seq', 445, true);
 -- Name: radiobutton_buttonid_seq; Type: SEQUENCE SET; Schema: public; Owner: meliha
 --
 
-SELECT pg_catalog.setval('public.radiobutton_buttonid_seq', 1095, true);
+SELECT pg_catalog.setval('public.radiobutton_buttonid_seq', 1192, true);
 
 
 --
@@ -766,7 +695,7 @@ ALTER TABLE ONLY public.textbox
     ADD CONSTRAINT textbox_elementid_fkey FOREIGN KEY (elementid) REFERENCES public.element(elementid) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
--- Completed on 2019-02-14 03:08:25 CET
+-- Completed on 2019-02-14 16:24:21 CET
 
 --
 -- PostgreSQL database dump complete
