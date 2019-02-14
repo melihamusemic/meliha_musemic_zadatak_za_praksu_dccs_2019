@@ -62,7 +62,7 @@ input[type = text]{
 
 
 .selectFormularName select {
-    width: 170px;
+    width: 250px;
     font-size:17px;
 }
 
@@ -111,10 +111,6 @@ input[class = rbLabel] {
 
 .radioButtonLabels {
     display: none;
-}
-
-.selectName {
-    width: 250px;
 }
 
 input[class = version]{

@@ -287,7 +287,6 @@ $(document).ready(function () {
                     select.appendChild(option);
                 }
                 select.selectedIndex = -1;
-                select.className = "selectName";
             }
         })
     });
@@ -296,199 +295,211 @@ $(document).ready(function () {
     jQuery("#loadButton").click(function () {
         var name = document.getElementById("selectFormular").value;
         var ver = document.getElementById("version").value;
+        if (name == "")
+            alert("Formular name must be selected!");
+        else {
+            if (ver == "")
+                ver = 0;
+            jQuery.ajax({
+                type: "GET",
+                url: 'http://localhost:3001/getFilledFormular',
+                crossDomain: true,
+                withCredentials: true,
+                dataType: "jsonp",
+                data: {
+                    formularName: name,
+                    version: ver,
+                },
+                success: function (response) {
+                    entry = response[0];
+                    var arrayOfObjects = Object.values(entry)[0];  // objects received from database
 
-        jQuery.ajax({
-            type: "GET",
-            url: 'http://localhost:3001/getFilledFormular',
-            crossDomain: true,
-            withCredentials: true,
-            dataType: "jsonp",
-            data: {
-                formularName: name,
-                version: ver,
-            },
-            success: function (response) {
-                entry = response[0];
-                var arrayOfObjects = Object.values(entry)[0];  // objects received from database
+                    clearBox("panel2");
+                    if (arrayOfObjects != null) {
+                        var len = arrayOfObjects.length;
 
-                clearBox("panel2");
-                if (arrayOfObjects != null) {
-                    var len = arrayOfObjects.length;
+                        // if array is not empty
+                        if (len != 0) {
+                            arrayOfObjects.sort(function (a, b) { return a.elementid - b.elementid });
+                            var row = 0;
 
-                    // if array is not empty
-                    if (len != 0) {
-                        arrayOfObjects.sort(function (a, b) { return a.elementid - b.elementid });
-                        var row = 0;
+                            while (arrayOfObjects[row] != null && arrayOfObjects[row].hasOwnProperty('elementid')) {
+                                var obj = Object.values(arrayOfObjects[row]);
+                                var lab = obj[0];
+                                var value = obj[1];
+                                var elementId = obj[2];
+                                var validation = obj[3];
+                                var elementType = obj[4];
 
-                        while (arrayOfObjects[row] != null && arrayOfObjects[row].hasOwnProperty('elementid')) {
-                            var obj = Object.values(arrayOfObjects[row]);
-                            var lab = obj[0];
-                            var value = obj[1];
-                            var elementId = obj[2];
-                            var validation = obj[3];
-                            var elementType = obj[4];
+                                var elementContainer = document.createElement("div");
 
-                            var elementContainer = document.createElement("div");
+                                var label = document.createTextNode(lab);
+                                var input = document.createElement("input");
 
-                            var label = document.createTextNode(lab);
-                            var input = document.createElement("input");
+                                elementContainer.appendChild(label);
 
-                            elementContainer.appendChild(label);
+                                if (validation == "Mandatory") {
+                                    label.nodeValue = lab + "*";
+                                    input.required = true;
+                                }
 
-                            if (validation == "Mandatory") {
-                                label.nodeValue = lab + "*";
-                                input.required = true;
-                            }
-
-                            if (elementType == "Textbox") {
-                                if (validation == "Numeric")
-                                    input.type = "number";
-                                else
-                                    input.type = "text";
-                                input.value = value;
-                                elementContainer.appendChild(input);
-                            }
+                                if (elementType == "Textbox") {
+                                    if (validation == "Numeric")
+                                        input.type = "number";
+                                    else
+                                        input.type = "text";
+                                    input.value = value;
+                                    elementContainer.appendChild(input);
+                                }
 
 
-                            else if (elementType == "Radio buttons") {
-                                var container = document.createElement("div");
-                                container.style.marginBottom = "20px";
-                                for (var k = 1; k < arrayOfObjects.length; k++)
-                                    if (arrayOfObjects[k].hasOwnProperty('buttonid')) {
-                                        var buttonContainer = document.createElement("div");
-                                        var button = Object.values(arrayOfObjects[k]);
-                                        var buttonid = button[0];
-                                        var buttonLabel = button[1];
-                                        var buttonValue = button[2];
-                                        var buttonGroupId = button[3];
-                                        var buttonInput = document.createElement("input");
+                                else if (elementType == "Radio buttons") {
+                                    var container = document.createElement("div");
+                                    container.style.marginBottom = "20px";
+                                    for (var k = 1; k < arrayOfObjects.length; k++)
+                                        if (arrayOfObjects[k].hasOwnProperty('buttonid')) {
+                                            var buttonContainer = document.createElement("div");
+                                            var button = Object.values(arrayOfObjects[k]);
+                                            var buttonid = button[0];
+                                            var buttonLabel = button[1];
+                                            var buttonValue = button[2];
+                                            var buttonGroupId = button[3];
+                                            var buttonInput = document.createElement("input");
 
-                                        if (buttonValue)
-                                            buttonInput.checked = true;
-                                        else
-                                            buttonInput.checked = false;
+                                            if (buttonValue)
+                                                buttonInput.checked = true;
+                                            else
+                                                buttonInput.checked = false;
 
-                                        if (validation == "Mandatory") {
-                                            buttonInput.required = true;
+                                            if (validation == "Mandatory") {
+                                                buttonInput.required = true;
+                                            }
+
+                                            if (buttonGroupId == elementId) {
+                                                buttonContainer.appendChild(buttonInput);
+                                                buttonContainer.appendChild(document.createTextNode(buttonLabel));
+                                            }
+
+                                            buttonInput.type = "radio";
+                                            buttonInput.value = buttonValue;
+                                            buttonInput.id = buttonid;
+                                            buttonInput.name = "radioButton" + buttonGroupId;
+                                            buttonInput.className = "buttonInput";
+
+                                            container.appendChild(buttonContainer);
+                                            container.id = elementId;
+
                                         }
+                                    elementContainer.appendChild(container);
+                                }
 
-                                        if (buttonGroupId == elementId) {
-                                            buttonContainer.appendChild(buttonInput);
-                                            buttonContainer.appendChild(document.createTextNode(buttonLabel));
-                                        }
+                                else if (elementType == "Checkbox") {
+                                    input.type = "checkbox";
+                                    if (value)
+                                        input.checked = true;
+                                    else
+                                        input.checked = false;
+                                    elementContainer.appendChild(input);
+                                }
 
-                                        buttonInput.type = "radio";
-                                        buttonInput.value = buttonValue;
-                                        buttonInput.id = buttonid;
-                                        buttonInput.name = "radioButton" + buttonGroupId;
-                                        buttonInput.className = "buttonInput";
+                                input.id = elementId;
+                                input.className = "select2";
 
-                                        container.appendChild(buttonContainer);
-                                        container.id = buttonGroupId;
-                                    }
-                                elementContainer.appendChild(container);
+                                elementContainer.className = "elContainer";
+                                elementContainer.style.fontSize = "15px";
+
+                                panel2Container.appendChild(elementContainer);
+
+                                row++;
                             }
 
-                            else if (elementType == "Checkbox") {
-                                input.type = "checkbox";
-                                if (value)
-                                    input.checked = true;
-                                else
-                                    input.checked = false;
-                                elementContainer.appendChild(input);
-                            }
-
-                            input.id = elementId;
-                            input.className = "select2";
-
-                            elementContainer.className = "elContainer";
-                            elementContainer.style.fontSize = "15px";
-
-                            panel2Container.appendChild(elementContainer);
-                            row++;
                         }
+                        saveButton2.style.display = "block";
+                    } else
+                        saveButton2.style.display = "none";
 
-                    }
-                    saveButton2.style.display = "block";
-                } else
-                    saveButton2.style.display = "none";
+                }
 
-            }
-
-        })
+            })
+        }
     })
 
     jQuery("#form2").submit(function (e) {
         e.preventDefault();
         var name = document.getElementById("selectFormular").value;
-        var ver = parseInt(document.getElementById("version").value);
-        var divs = document.getElementById("panel2").children;
-        var elements = [];
+        if (document.getElementById("version").value == "")
+            alert("Version empty! Please enter version!");
+        else {
+            var ver = parseInt(document.getElementById("version").value);
+            var divs = document.getElementById("panel2").children;
+            var elements = [];
 
-        for (var i = 0; i < divs.length; i++) {
-            if (divs[i].children[0].nodeName == "INPUT") {  // if textbox or checkbox
-                var elem = divs[i].children[0];
-                var id = elem.id;
-                if (elem.type == "text") {
-                    var type = "Textbox";
-                    var elementValue = elem.value;
+            for (var i = 0; i < divs.length; i++) {
+                if (divs[i].children[0].nodeName == "INPUT") {  // if textbox or checkbox
+                    var elem = divs[i].children[0];
+                    var id = elem.id;
+                    if (elem.type == "text" || elem.type == "number") {
+                        var type = "Textbox";
+                        var elementValue = elem.value;
+                    }
+                    else {
+                        var type = "Checkbox";
+                        var elementValue;
+                        if (elem.checked)
+                            elementValue = true;
+                        else
+                            elementValue = false;
+                    }
+                    elements.push({ elementId: id, elementType: type, value: elementValue });  // push informations about textbox/checkbox
                 }
-                else {
-                    var type = "Checkbox";
-                    var elementValue;
-                    if (elem.checked)
-                        elementValue = true;
-                    else
-                        elementValue = false;
-                }
-                elements.push({ elementId: id, elementType: type, value: elementValue });  // push informations about textbox/checkbox
-            }
 
-            else if (divs[i].children[0].nodeName == "DIV") {  // else if radio buttons (each is stored into div, than in group div)
-                var rbGroupDiv = divs[i].children[0];
-                var rbGroupId = rbGroupDiv.id;
-                var rButtons = [];
+                else if (divs[i].children[0].nodeName == "DIV") {  // else if radio buttons (each is stored into div, than in group div)
+                    var rbGroupDiv = divs[i].children[0];
+                    var rbGroupId = rbGroupDiv.id;
+                    var rButtons = [];
 
-                if (rbGroupDiv.childElmentCount != 0) {
-                    for (var k = 0; k < rbGroupDiv.childElementCount; k++) {
-                        buttonDiv = rbGroupDiv.children[k];
-                        if (buttonDiv.childElementCount != 0) {
-                            for (var j = 0; j < buttonDiv.childElementCount; j++) {
-                                var rb = buttonDiv.children[j];
-                                var rbValue;
-                                var rbId;
-                                if (rb.checked)  // if checked send into database "true"
-                                    rbValue = true;
-                                else             // else send "false" 
-                                    rbValue = false;
-                                rbId = rb.id;
-                                rButtons.push({ value: rbValue, id: rbId }); // we store infromations about radio button into array (value and id)
+                    if (rbGroupDiv.childElmentCount != 0) {
+                        for (var k = 0; k < rbGroupDiv.childElementCount; k++) {
+                            buttonDiv = rbGroupDiv.children[k];
+                            if (buttonDiv.childElementCount != 0) {
+                                for (var j = 0; j < buttonDiv.childElementCount; j++) {
+                                    var rb = buttonDiv.children[j];
+                                    var rbValue;
+                                    var rbId;
+
+                                    if (rb.checked)  // if checked send into database "true"
+                                        rbValue = true;
+                                    else             // else send "false" 
+                                        rbValue = false;
+                                    rbId = rb.id;
+                                    rButtons.push({ value: rbValue, id: rbId }); // we store infromations about radio button into array (value and id)
+                                }
                             }
                         }
                     }
+                    elements.push({ elementId: rbGroupId, elementType: "Radio buttons", buttons: rButtons }); // push whole element "Radio buttons"
                 }
-                elements.push({ elementId: rbGroupId, elementType: "Radio buttons", buttons: rButtons }); // push whole element "Radio buttons"
             }
-        }
 
-        // send data
-        jQuery.ajax({
-            type: "GET",
-            url: 'http://localhost:3001/fillFormular',
-            crossDomain: true,
-            withCredentials: true,
-            dataType: "jsonp",
-            data: {
-                formularName: name,
-                version: ver,
-                element: elements
-            },
-            success: function () {
-            },
-            error: function (XMLHttpRequest, textStatus, errorThrown) {
-                alert("Status: " + textStatus); alert("Error: " + errorThrown);
-            }
-        });
+            // send data
+            jQuery.ajax({
+                type: "GET",
+                url: 'http://localhost:3001/fillFormular',
+                crossDomain: true,
+                withCredentials: true,
+                dataType: "jsonp",
+                data: {
+                    formularName: name,
+                    version: ver,
+                    element: elements
+                },
+                success: function () {
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    alert("Status: " + textStatus); alert("Error: " + errorThrown);
+                }
+            });
+        }
     }
     );
 

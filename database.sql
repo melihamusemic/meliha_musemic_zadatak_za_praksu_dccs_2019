@@ -5,7 +5,7 @@
 -- Dumped from database version 10.6 (Ubuntu 10.6-0ubuntu0.18.04.1)
 -- Dumped by pg_dump version 10.6 (Ubuntu 10.6-0ubuntu0.18.04.1)
 
--- Started on 2019-02-08 22:30:31 CET
+-- Started on 2019-02-14 03:08:25 CET
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -26,7 +26,7 @@ CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 
 
 --
--- TOC entry 2963 (class 0 OID 0)
+-- TOC entry 2971 (class 0 OID 0)
 -- Dependencies: 1
 -- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
 --
@@ -35,7 +35,7 @@ COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
 
 
 --
--- TOC entry 223 (class 1255 OID 17315)
+-- TOC entry 221 (class 1255 OID 17315)
 -- Name: fill_formular_from_json(json); Type: FUNCTION; Schema: public; Owner: meliha
 --
 
@@ -43,48 +43,72 @@ CREATE FUNCTION public.fill_formular_from_json(in_json json) RETURNS void
     LANGUAGE plpgsql
     AS $$
 DECLARE
-novi jsonb := (in_json)::jsonb;
+JsonB jsonb := (in_json)::jsonb;
+newId int;
+oldId int;
 
 BEGIN
+IF NOT EXISTS ( SELECT formularid FROM formular WHERE formularname = (JsonB->'formularName')::text AND version = (JsonB->>'version')::int ) THEN
+   INSERT INTO formular(formularname,version) VALUES ((JsonB->'formularName')::text, (JsonB->>'version')::int);
 
- IF NOT EXISTS (SELECT elementid FROM textbox WHERE elementid IN ( SELECT (rec->>'elementId')::int FROM  jsonb_array_elements(novi->'element')rec)) THEN
+SELECT formularid INTO newId FROM formular WHERE formularname = (JsonB->'formularName')::text AND version = (JsonB->>'version')::int; 
+SELECT formularid INTO oldId FROM formular WHERE formularname = (JsonB->'formularName')::text AND version = 0; 
 
-  INSERT INTO textbox (elementid, value)(SELECT elementid, (rec->>'value')::text FROM element, jsonb_array_elements(novi->'element')rec WHERE elementid = (rec->>'elementId')::int AND (rec->>'elementType')::text = 'Textbox'); 
+INSERT INTO element (formularid, elementtype, label, validation)
+(SELECT newId, elementtype, label, validation FROM element INNER JOIN formular ON element.formularid = formular.formularid WHERE formularname = (JsonB->'formularName')::text AND version = 0);
 
- ELSE 
-  UPDATE textbox SET value = (rec->>'value')::text FROM jsonb_array_elements(novi->'element')rec WHERE elementid = (rec->>'elementId')::int;
+INSERT INTO textbox(elementid, value)
+(SELECT other.elementid, (rec->>'value')::text FROM element AS other, element AS one, jsonb_array_elements(JsonB->'element')rec 
+WHERE other.elementid != one.elementid 
+AND one.elementid = (rec->>'elementId')::int
+AND one.elementtype = 'Textbox'
+AND other.elementtype = 'Textbox'
+AND other.label = one.label
+AND one.formularid = oldId
+AND other.formularid = newId); 
 
- END IF;
+INSERT INTO checkbox(elementid, value)
+(SELECT other.elementid, (rec->>'value')::boolean FROM element AS other, element AS one, jsonb_array_elements(JsonB->'element')rec 
+WHERE other.elementid != one.elementid 
+AND one.elementid = (rec->>'elementId')::int
+AND one.elementtype = 'Checkbox'
+AND other.elementtype = 'Checkbox'
+AND other.label = one.label
+AND one.formularid = oldId
+AND other.formularid = newId); 
 
- 
- IF NOT EXISTS (SELECT elementid FROM checkbox WHERE elementid IN ( SELECT (rec->>'elementId')::int FROM  jsonb_array_elements(novi->'element')rec)) THEN
+INSERT INTO radiobutton (elementid, buttonlabel) 
+(SELECT other.elementid, oldB.buttonlabel
+ FROM element AS other, radiobutton AS oldB, jsonb_array_elements(JsonB->'element') rec, element AS one
+ WHERE other.elementid != one.elementid 
+ AND one.elementid = (rec->>'elementId')::int
+ AND one.elementtype = 'Radio buttons'
+ AND other.elementtype = 'Radio buttons'
+ AND other.label = one.label
+ AND one.formularid = oldId
+ AND other.formularid = newId
+ AND oldB.elementid = one.elementid);
 
- INSERT INTO checkbox (elementid, value)(SELECT elementid, (rec->>'value')::boolean FROM element, jsonb_array_elements(novi->'element')rec WHERE elementid = (rec->>'elementId')::int AND (rec->>'elementType')::text = 'Checkbox');
+ UPDATE radiobutton SET value = subquery.val FROM (SELECT (jsonb_array_elements(rec->'buttons')->>'value')::boolean AS val, (jsonb_array_elements(rec->'buttons')->>'id')::int AS bId, one.buttonid AS id, other.buttonid AS otherId, element.formularid AS formId
+ FROM jsonb_array_elements(JsonB->'element') rec, radiobutton AS one 
+    INNER JOIN radiobutton AS other ON one.buttonlabel = other.buttonlabel
+    INNER JOIN element ON element.elementid = one.elementid
+    WHERE one.buttonid != other.buttonid) AS subquery 
+    WHERE subquery.otherId = subquery.bId AND subquery.id = radiobutton.buttonid AND subquery.formid = newId;
 
- ELSE 
+ELSE
 
- UPDATE checkbox SET value = (rec->>'value')::boolean FROM jsonb_array_elements(novi->'element')rec WHERE elementid = (rec->>'elementId')::int;
+  UPDATE textbox SET value = (rec->>'value')::text FROM jsonb_array_elements(JsonB->'element')rec WHERE elementid = (rec->>'elementId')::int;
 
- END IF;
-
- 
- IF NOT EXISTS (SELECT elementid FROM radiobutton WHERE elementid IN ( SELECT (rec->>'elementId')::int FROM  jsonb_array_elements(novi->'element')rec)) THEN
-
- INSERT INTO radiobutton (value)
-	(SELECT (jsonb_array_elements(rec->'buttons')->>'value')::boolean
-	FROM radiobutton, jsonb_array_elements(novi->'element') rec
-	WHERE elementid = (rec->>'elementId')::int
-	AND buttonid = (jsonb_array_elements(rec->'buttons')->>'id')::int);
-
- ELSE 
+  UPDATE checkbox SET value = (rec->>'value')::boolean FROM jsonb_array_elements(JsonB->'element')rec WHERE elementid = (rec->>'elementId')::int;
  
   UPDATE radiobutton
   SET value = subquery.val
   FROM (SELECT (jsonb_array_elements(rec->'buttons')->>'value')::boolean AS val, (jsonb_array_elements(rec->'buttons')->>'id')::int AS id
-	FROM jsonb_array_elements(novi->'element') rec) AS subquery
+	FROM jsonb_array_elements(JsonB->'element') rec) AS subquery
 	WHERE radiobutton.buttonid = subquery.id;
-END IF;
 
+END IF;
  END
 $$;
 
@@ -92,7 +116,7 @@ $$;
 ALTER FUNCTION public.fill_formular_from_json(in_json json) OWNER TO meliha;
 
 --
--- TOC entry 218 (class 1255 OID 17183)
+-- TOC entry 220 (class 1255 OID 17183)
 -- Name: get_filled_formular_from_db(text, integer); Type: FUNCTION; Schema: public; Owner: meliha
 --
 
@@ -132,7 +156,28 @@ SELECT formularid INTO oldId FROM formular WHERE formularname = '"' || name || '
 INSERT INTO element (formularid, elementtype, label, validation)
 (SELECT newId, elementtype, label, validation FROM element INNER JOIN formular ON element.formularid = formular.formularid WHERE formularname = '"' || name || '"' AND version = 0);
 
-INSERT INTO radiobutton (elementid, buttonlabel) 
+
+INSERT INTO textbox(elementid)
+(SELECT other.elementid FROM element AS other, element AS one 
+WHERE other.elementid != one.elementid 
+AND one.elementtype = 'Textbox'
+AND other.elementtype = 'Textbox'
+AND other.label = one.label
+AND one.formularid = oldId
+AND other.formularid = newId);
+
+
+INSERT INTO checkbox(elementid)
+(SELECT other.elementid FROM element AS other, element AS one 
+WHERE other.elementid != one.elementid 
+AND one.elementtype = 'Checkbox'
+AND other.elementtype = 'Checkbox'
+AND other.label = one.label
+AND one.formularid = oldId
+AND other.formularid = newId); 
+
+
+INSERT INTO radiobutton (elementid, buttonlabel)
 (SELECT other.elementid, buttonlabel FROM element AS other, element AS one, radiobutton 
 WHERE other.elementid != one.elementid 
 AND other.label = one.label
@@ -188,7 +233,7 @@ $$;
 ALTER FUNCTION public.get_filled_formular_from_db(name text, ver integer) OWNER TO meliha;
 
 --
--- TOC entry 221 (class 1255 OID 17188)
+-- TOC entry 218 (class 1255 OID 17188)
 -- Name: get_filled_formular_from_db(text, text); Type: FUNCTION; Schema: public; Owner: meliha
 --
 
@@ -247,7 +292,7 @@ $$;
 ALTER FUNCTION public.get_filled_formular_from_db(name text, ver text) OWNER TO meliha;
 
 --
--- TOC entry 220 (class 1255 OID 18349)
+-- TOC entry 223 (class 1255 OID 18682)
 -- Name: get_from_db(text); Type: FUNCTION; Schema: public; Owner: meliha
 --
 
@@ -275,7 +320,7 @@ $$;
 ALTER FUNCTION public.get_from_db(name text) OWNER TO meliha;
 
 --
--- TOC entry 219 (class 1255 OID 18348)
+-- TOC entry 222 (class 1255 OID 18681)
 -- Name: insert_from_json(json); Type: FUNCTION; Schema: public; Owner: meliha
 --
 
@@ -300,16 +345,44 @@ BEGIN
   INSERT INTO element (formularid, elementtype, label, validation)
   SELECT id, (rec->>'type')::text, (rec->>'label')::text, (rec->>'validation')::text FROM json_array_elements(in_json->'element') rec;
 
-  INSERT INTO radiobutton (elementid, buttonlabel) 
-  SELECT element.elementid, (json_array_elements(rec->'rbLabels')->>'rLabel')::text 
-  FROM element, json_array_elements(in_json->'element') rec 
-  WHERE element.elementtype = 'Radio buttons' AND element.formularid = id AND element.label = (rec->>'label')::text ;
+  INSERT INTO textbox (elementid) 
+  SELECT element.elementid  
+  FROM element, json_array_elements(in_json->'element') rec WHERE element.elementtype = 'Textbox' AND element.formularid = id AND element.label = (rec->>'label')::text ;
+
+  INSERT INTO checkbox (elementid) 
+  SELECT element.elementid  
+  FROM element, json_array_elements(in_json->'element') rec WHERE element.elementtype = 'Checkbox' AND element.formularid = id AND element.label = (rec->>'label')::text ;
+
+
+  INSERT INTO radiobutton (elementid, buttonlabel) SELECT element.elementid, (json_array_elements(rec->'rbLabels')->>'rLabel')::text FROM element, json_array_elements(in_json->'element') rec  WHERE element.elementtype = 'Radio buttons' AND element.formularid = id AND element.label = (rec->>'label')::text ;
 
 END
 $$;
 
 
 ALTER FUNCTION public.insert_from_json(in_json json) OWNER TO meliha;
+
+--
+-- TOC entry 219 (class 1255 OID 17728)
+-- Name: nesto(jsonb); Type: FUNCTION; Schema: public; Owner: meliha
+--
+
+CREATE FUNCTION public.nesto(novi jsonb) RETURNS SETOF integer
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+ RETURN QUERY SELECT buttonId FROM radiobutton, jsonb_array_elements(novi->'element') rec
+  WHERE elementid = (rec->>'elementId')::int
+ ;-- AND (SELECT (rec1->>'id')::int FROM jsonb_array_elements(rec->'buttons') rec1 WHERE (rec->>'id')::int = buttonId) = buttonId;
+END; 
+$$;
+
+
+ALTER FUNCTION public.nesto(novi jsonb) OWNER TO meliha;
+
+SET default_tablespace = '';
+
+SET default_with_oids = false;
 
 --
 -- TOC entry 204 (class 1259 OID 17159)
@@ -357,7 +430,7 @@ CREATE SEQUENCE public.element_elementid_seq
 ALTER TABLE public.element_elementid_seq OWNER TO meliha;
 
 --
--- TOC entry 2964 (class 0 OID 0)
+-- TOC entry 2972 (class 0 OID 0)
 -- Dependencies: 200
 -- Name: element_elementid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: meliha
 --
@@ -396,7 +469,7 @@ CREATE SEQUENCE public.formular_formularid_seq
 ALTER TABLE public.formular_formularid_seq OWNER TO meliha;
 
 --
--- TOC entry 2965 (class 0 OID 0)
+-- TOC entry 2973 (class 0 OID 0)
 -- Dependencies: 199
 -- Name: formular_formularid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: meliha
 --
@@ -436,7 +509,7 @@ CREATE SEQUENCE public.radiobutton_buttonid_seq
 ALTER TABLE public.radiobutton_buttonid_seq OWNER TO meliha;
 
 --
--- TOC entry 2966 (class 0 OID 0)
+-- TOC entry 2974 (class 0 OID 0)
 -- Dependencies: 202
 -- Name: radiobutton_buttonid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: meliha
 --
@@ -479,6 +552,137 @@ ALTER TABLE ONLY public.formular ALTER COLUMN formularid SET DEFAULT nextval('pu
 --
 
 ALTER TABLE ONLY public.radiobutton ALTER COLUMN buttonid SET DEFAULT nextval('public.radiobutton_buttonid_seq'::regclass);
+
+
+--
+-- TOC entry 2962 (class 0 OID 17159)
+-- Dependencies: 204
+-- Data for Name: checkbox; Type: TABLE DATA; Schema: public; Owner: meliha
+--
+
+COPY public.checkbox (elementid, value) FROM stdin;
+1752	\N
+1850	f
+1857	f
+\.
+
+
+--
+-- TOC entry 2959 (class 0 OID 16890)
+-- Dependencies: 201
+-- Data for Name: element; Type: TABLE DATA; Schema: public; Owner: meliha
+--
+
+COPY public.element (elementid, formularid, elementtype, label, validation) FROM stdin;
+1848	443	Textbox	Label 1	Mandatory
+1849	443	Textbox	Label 2	None
+1850	443	Checkbox	Label 3	None
+1851	443	Textbox	Label 4	Numeric
+1852	443	Radio buttons	Label 5	Mandatory
+1853	443	Textbox	Label 6	None
+1854	443	Radio buttons	Label 7	None
+1855	445	Textbox	Label 1	Mandatory
+1856	445	Textbox	Label 2	None
+1857	445	Checkbox	Label 3	None
+1858	445	Textbox	Label 4	Numeric
+1859	445	Radio buttons	Label 5	Mandatory
+1860	445	Textbox	Label 6	None
+1861	445	Radio buttons	Label 7	None
+1750	382	Textbox	Label 1	Mandatory
+1751	382	Textbox	Label 2	None
+1752	382	Checkbox	Label 3	None
+1753	382	Textbox	Label 4	Numeric
+1754	382	Radio buttons	Label 5	Mandatory
+1755	382	Textbox	Label 6	None
+1756	382	Radio buttons	Label 7	None
+\.
+
+
+--
+-- TOC entry 2956 (class 0 OID 16874)
+-- Dependencies: 198
+-- Data for Name: formular; Type: TABLE DATA; Schema: public; Owner: meliha
+--
+
+COPY public.formular (formularid, formularname, version) FROM stdin;
+382	"Some existing formular"	0
+443	"Some existing formular"	1
+445	"Some existing formular"	12
+\.
+
+
+--
+-- TOC entry 2961 (class 0 OID 16899)
+-- Dependencies: 203
+-- Data for Name: radiobutton; Type: TABLE DATA; Schema: public; Owner: meliha
+--
+
+COPY public.radiobutton (elementid, buttonid, buttonlabel, value) FROM stdin;
+1754	1022	Radio button label 3	\N
+1754	1023	Radio button label 2	\N
+1754	1024	Radio button label 1	\N
+1756	1025	rbl  1	\N
+1756	1026	rbl 2	\N
+1852	1086	Radio button label 3	f
+1852	1087	Radio button label 2	f
+1852	1088	Radio button label 1	t
+1854	1089	rbl  1	t
+1854	1090	rbl 2	f
+1859	1091	Radio button label 3	f
+1859	1092	Radio button label 2	f
+1859	1093	Radio button label 1	t
+1861	1094	rbl  1	f
+1861	1095	rbl 2	f
+\.
+
+
+--
+-- TOC entry 2963 (class 0 OID 17558)
+-- Dependencies: 205
+-- Data for Name: textbox; Type: TABLE DATA; Schema: public; Owner: meliha
+--
+
+COPY public.textbox (elementid, value) FROM stdin;
+1755	\N
+1753	\N
+1751	\N
+1750	\N
+1848	nesto
+1849	
+1851	
+1853	
+1855	jjj
+1856	
+1858	
+1860	
+\.
+
+
+--
+-- TOC entry 2975 (class 0 OID 0)
+-- Dependencies: 200
+-- Name: element_elementid_seq; Type: SEQUENCE SET; Schema: public; Owner: meliha
+--
+
+SELECT pg_catalog.setval('public.element_elementid_seq', 1861, true);
+
+
+--
+-- TOC entry 2976 (class 0 OID 0)
+-- Dependencies: 199
+-- Name: formular_formularid_seq; Type: SEQUENCE SET; Schema: public; Owner: meliha
+--
+
+SELECT pg_catalog.setval('public.formular_formularid_seq', 445, true);
+
+
+--
+-- TOC entry 2977 (class 0 OID 0)
+-- Dependencies: 202
+-- Name: radiobutton_buttonid_seq; Type: SEQUENCE SET; Schema: public; Owner: meliha
+--
+
+SELECT pg_catalog.setval('public.radiobutton_buttonid_seq', 1095, true);
 
 
 --
@@ -562,7 +766,7 @@ ALTER TABLE ONLY public.textbox
     ADD CONSTRAINT textbox_elementid_fkey FOREIGN KEY (elementid) REFERENCES public.element(elementid) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
--- Completed on 2019-02-08 22:30:31 CET
+-- Completed on 2019-02-14 03:08:25 CET
 
 --
 -- PostgreSQL database dump complete

@@ -63,7 +63,6 @@ const getFormularNames = (request, response) => {
 const getFilledFormular = (request, response) => {
      const name = request.query.formularName;
      const version = request.query.version;
-
      pool.query("SELECT * FROM get_filled_formular_from_db('" + name + "'," + version + ")", (error, results) => {
           if (error) {
                console.log("err " + error);
@@ -75,7 +74,6 @@ const getFilledFormular = (request, response) => {
 
 // send data to fill form
 const fillFormular = (request, response) => {
-     console.log(JSON.stringify(request.query));
      pool.query(" SELECT * FROM fill_formular_from_json('" + JSON.stringify(request.query) + "')", (error, results) => {
           if (error) {
                console.log("createFormular error");
