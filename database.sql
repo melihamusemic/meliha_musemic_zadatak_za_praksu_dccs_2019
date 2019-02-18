@@ -5,7 +5,7 @@
 -- Dumped from database version 10.6 (Ubuntu 10.6-0ubuntu0.18.04.1)
 -- Dumped by pg_dump version 10.6 (Ubuntu 10.6-0ubuntu0.18.04.1)
 
--- Started on 2019-02-14 16:24:21 CET
+-- Started on 2019-02-18 09:40:33 CET
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -544,6 +544,8 @@ ALTER TABLE ONLY public.radiobutton ALTER COLUMN buttonid SET DEFAULT nextval('p
 --
 
 COPY public.checkbox (elementid, value) FROM stdin;
+1970	\N
+1972	t
 \.
 
 
@@ -554,6 +556,11 @@ COPY public.checkbox (elementid, value) FROM stdin;
 --
 
 COPY public.element (elementid, formularid, elementtype, label, validation) FROM stdin;
+1968	462	Textbox	Label 1	Mandatory
+1969	461	Textbox	Label 1	Mandatory
+1970	461	Checkbox	Label 2	None
+1971	463	Textbox	Label 1	Mandatory
+1972	463	Checkbox	Label 2	None
 \.
 
 
@@ -564,6 +571,9 @@ COPY public.element (elementid, formularid, elementtype, label, validation) FROM
 --
 
 COPY public.formular (formularid, formularname, version) FROM stdin;
+461	"Some existing formular"	0
+462	"Some existing formular"	1
+463	"Some existing formular"	2
 \.
 
 
@@ -584,6 +594,9 @@ COPY public.radiobutton (elementid, buttonid, buttonlabel, value) FROM stdin;
 --
 
 COPY public.textbox (elementid, value) FROM stdin;
+1968	Meliha
+1969	\N
+1971	Nesto
 \.
 
 
@@ -593,7 +606,7 @@ COPY public.textbox (elementid, value) FROM stdin;
 -- Name: element_elementid_seq; Type: SEQUENCE SET; Schema: public; Owner: meliha
 --
 
-SELECT pg_catalog.setval('public.element_elementid_seq', 1966, true);
+SELECT pg_catalog.setval('public.element_elementid_seq', 1972, true);
 
 
 --
@@ -602,7 +615,7 @@ SELECT pg_catalog.setval('public.element_elementid_seq', 1966, true);
 -- Name: formular_formularid_seq; Type: SEQUENCE SET; Schema: public; Owner: meliha
 --
 
-SELECT pg_catalog.setval('public.formular_formularid_seq', 460, true);
+SELECT pg_catalog.setval('public.formular_formularid_seq', 463, true);
 
 
 --
@@ -695,7 +708,7 @@ ALTER TABLE ONLY public.textbox
     ADD CONSTRAINT textbox_elementid_fkey FOREIGN KEY (elementid) REFERENCES public.element(elementid) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
--- Completed on 2019-02-14 16:24:21 CET
+-- Completed on 2019-02-18 09:40:33 CET
 
 --
 -- PostgreSQL database dump complete
